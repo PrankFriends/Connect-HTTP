@@ -65,11 +65,13 @@ echo "Listener installed on port 8765 and running in background"
 
 ## Sending URLs from First Mac
 
+On the second Mac, run `hostname` to get its name. Then from the first Mac:
+
 ```bash
-curl -X POST http://<SECOND_MAC_IP>:8765 -d 'https://example.com'
+curl -X POST http://<HOSTNAME>.local:8765 -d 'https://example.com'
 ```
 
-Replace `<SECOND_MAC_IP>` with the LAN IP of the second Mac. For testing on the same Mac, use `127.0.0.1`.
+Replace `<HOSTNAME>` with the result from the `hostname` command.
 
 ## Cleanup
 
