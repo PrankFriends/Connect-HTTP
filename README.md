@@ -13,8 +13,10 @@ mkdir -p ~/open_url_listener && \
 cat << SCRIPT > ~/open_url_listener/open_url_listener.sh
 #!/bin/bash
 while true; do
-  url=\$(curl -s ntfy.sh/$TOPIC)
-  [ -n "\$url" ] && open "\$url"
+  curl -s https://ntfy.sh/$TOPIC/raw | while read -r url; do
+    [ -n "\$url" ] && open "\$url"
+  done
+  sleep 2
 done
 SCRIPT
 
@@ -51,7 +53,7 @@ echo "Listener installed and running in background"
 ## Sending URLs from First Mac
 
 ```bash
-curl -d 'https://example.com' ntfy.sh/YOUR_SECRET_TOPIC
+curl -d 'https://example.com' https://ntfy.sh/YOUR_SECRET_TOPIC
 ```
 
 Use the same topic string as above.
