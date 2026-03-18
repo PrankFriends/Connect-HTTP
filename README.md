@@ -1,39 +1,24 @@
 # Open URL Listener for macOS
 
 ## Description
-A lightweight background listener for macOS that opens URLs sent from another Mac. Runs automatically at login and survives reboots.
+A lightweight background listener for macOS that opens URLs sent from another Mac via [ntfy.sh](https://ntfy.sh). Works on any network (no direct connection needed). Runs automatically at login and survives reboots.
 
 ## Setup on Second Mac
 
-Paste this in Terminal:
+Replace `YOUR_SECRET_TOPIC` below with a long random string (e.g. `myMacs_a8f3k2x9`). This acts as your private channel. Then paste in Terminal:
 
 ```bash
-PYTHON_PATH=$(which python3) && \
-mkdir -p ~/open_url_listener && cd ~/open_url_listener && \
-cat << 'EOF' > open_url_listener.py
-#!/usr/bin/env python3
-import http.server
-import socketserver
-import os
+TOPIC=YOUR_SECRET_TOPIC && \
+mkdir -p ~/open_url_listener && \
+cat << SCRIPT > ~/open_url_listener/open_url_listener.sh
+#!/bin/bash
+while true; do
+  url=\$(curl -s ntfy.sh/$TOPIC)
+  [ -n "\$url" ] && open "\$url"
+done
+SCRIPT
 
-PORT = 8765
-
-class Handler(http.server.BaseHTTPRequestHandler):
-    def do_POST(self):
-        length = int(self.headers['Content-Length'])
-        url = self.rfile.read(length).decode()
-        os.system(f"open '{url}'")
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"URL opened")
-    def log_message(self, format, *args):
-        return
-
-with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
-    httpd.serve_forever()
-EOF
-
-chmod +x open_url_listener.py && \
+chmod +x ~/open_url_listener/open_url_listener.sh && \
 cat << EOF > ~/Library/LaunchAgents/com.openurl.listener.plist
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -43,8 +28,8 @@ cat << EOF > ~/Library/LaunchAgents/com.openurl.listener.plist
     <string>com.openurl.listener</string>
     <key>ProgramArguments</key>
     <array>
-        <string>$PYTHON_PATH</string>
-        <string>/Users/$USER/open_url_listener/open_url_listener.py</string>
+        <string>/bin/bash</string>
+        <string>$HOME/open_url_listener/open_url_listener.sh</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -60,18 +45,16 @@ EOF
 
 launchctl unload ~/Library/LaunchAgents/com.openurl.listener.plist 2>/dev/null
 launchctl load ~/Library/LaunchAgents/com.openurl.listener.plist
-echo "Listener installed on port 8765 and running in background"
+echo "Listener installed and running in background"
 ```
 
 ## Sending URLs from First Mac
 
-On the second Mac, run `hostname` to get its name. Then from the first Mac:
-
 ```bash
-curl -X POST http://<HOSTNAME>.local:8765 -d 'https://example.com'
+curl -d 'https://example.com' ntfy.sh/YOUR_SECRET_TOPIC
 ```
 
-Replace `<HOSTNAME>` with the result from the `hostname` command.
+Use the same topic string as above.
 
 ## Cleanup
 
