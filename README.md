@@ -13,7 +13,7 @@ mkdir -p ~/open_url_listener && \
 cat << SCRIPT > ~/open_url_listener/open_url_listener.sh
 #!/bin/bash
 while true; do
-  curl -s https://ntfy.sh/$TOPIC/raw | while read -r url; do
+  curl -sN https://ntfy.sh/$TOPIC/raw | while read -r url; do
     [ -n "\$url" ] && open "\$url"
   done
   sleep 2
